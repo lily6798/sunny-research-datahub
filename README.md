@@ -15,8 +15,36 @@ git-ignored and stays on Lily's machine:
 - `dashboards/` — the plaintext interactive dashboards
 - `data/nielsen/` — source Nielsen exports the dashboards are built from
 - `build.sh` — encrypts `index.html` + `dashboards/*.html` into `docs/`
+- `generator/` — Python pipeline that turns a raw Nielsen Ad Intel `.xlsx` export into a
+  full dashboard HTML (see below). This folder *is* committed — it's code, not spend data.
 
-## Adding a new dashboard
+## Generating a dashboard straight from a Nielsen export
+
+For a vertical you have a raw Nielsen Ad Intel `.xlsx` export for (Advertiser × Media Type ×
+monthly spend, 12-month rolling), you don't have to hand-build the HTML:
+
+1. Drop the `.xlsx` into `data/nielsen/`.
+2. In `generator/verticals.py`, add a new vertical config: a `structure_fn`/`category_fn`
+   pair (heuristic, by advertiser name) for the market-structure and segment lenses, plus
+   `insights_fn` and `struct_note_fn` for the write-up. Copy an existing vertical
+   (e.g. `SPORT_TEAMS`) as a template — most of the work is deciding the 3–4 way
+   "market structure" split and the finer ~6–9 way "segment" split for that category.
+3. Run it:
+   ```bash
+   cd generator && source <your venv>/bin/activate  # needs pandas + openpyxl
+   python3 verticals.py
+   ```
+   This writes the finished dashboard straight into `dashboards/`, including a full,
+   searchable, segment-filterable list of *every* advertiser (not just the top 25).
+4. Add the card to `index.html`'s `ASSETS` array (see below), then `./build.sh` and push.
+
+**Important:** every KPI/insight number must be a named lookup (`structure['Some Bucket']`),
+never "whichever bucket is biggest" — a dashboard's #5 KPI label and value went out of sync
+early on for exactly that reason (Motor Vehicles' "Chinese challenger" KPI briefly showed the
+*Legacy OEM* number, because that bucket happened to be largest). Each vertical config sets
+`struct_kpi_key` explicitly to avoid this.
+
+## Adding a hand-built dashboard (no raw data)
 
 1. Drop the dashboard HTML into `dashboards/` (lowercase filename, e.g. `auto-media-spend-2026.html`).
 2. Add an entry to the `ASSETS` list at the top of the `<script>` in `index.html`:

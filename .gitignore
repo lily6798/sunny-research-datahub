@@ -1,0 +1,10 @@
+# Plaintext source and data stay LOCAL ONLY — the public repo holds just the
+# encrypted build in docs/. Committing these would expose the research data
+# and the site password.
+/index.html
+/dashboards/
+/data/
+/build.sh
+/.staticrypt.json
+node_modules/
+.DS_Store
